@@ -16,19 +16,19 @@ This monorepo contains the StarStream ecosystem:
 
 ## 🚀 Quick Start
 
+The fastest way to start a new project is using the StarStream CLI (requires [uv](https://astral.sh/uv)):
+
+```bash
+uvx starstream init my-app
+cd my-app
+uv run app.py
+```
+
+### Manual Installation
 ```python
 from starhtml import *
 from starstream import StarStreamPlugin
-
-app, rt = star_app()
-stream = StarStreamPlugin(app)  # That's it!
-
-# When history or persistence is enabled, StarStream uses SQLite as the default backend.
-# No configuration required for local persistence.
-```
-
-## 🛠 Skills & Agent Support
-
+...
 StarStream comes with a pre-configured `SKILL.md` for AI agents. This skill provides expert instructions for building real-time applications, managing presence, and integrating Loro or PocketBase.
 
 ## 📁 Structure
