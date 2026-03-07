@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "starstream-pocketbase"
+version = "0.1.0-alpha.1"
+description = "PocketBase integration for StarStream - Real-time data persistence"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Cali (Renato Caliari)", email = "renatoac82@gmail.com"}
+]
+keywords = [
+    "starstream",
+    "starhtml",
+    "pocketbase",
+    "realtime",
+    "database",
+    "storage",
+    "sync"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Database",
+    "Framework :: AsyncIO",
+]
+dependencies = [
+    "starstream>=0.1.0-alpha.1",
+    "pocketbase>=0.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/renatocaliari/starstream"
+Repository = "https://github.com/renatocaliari/starstream"
+Documentation = "https://github.com/renatocaliari/starstream/tree/main/packages/starstream-pocketbase"
+Issues = "https://github.com/renatocaliari/starstream/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["starstream_pocketbase"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

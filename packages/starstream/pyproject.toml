@@ -1,0 +1,86 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "starstream"
+version = "0.1.0-alpha.1"
+description = "Convention over Configuration for StarHTML Real-time Broadcasting"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Cali (Renato Caliari)", email = "renatoac82@gmail.com"}
+]
+keywords = [
+    "starhtml",
+    "datastar",
+    "sse",
+    "realtime",
+    "websocket",
+    "broadcasting",
+    "collaboration"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Framework :: AsyncIO",
+]
+dependencies = [
+    "starhtml>=0.1.0",
+    "aiofiles>=23.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.5.0",
+]
+all = [
+    "starstream-pocketbase",
+    "starstream-loro",
+]
+
+[project.urls]
+Homepage = "https://github.com/renatocaliari/starstream"
+Repository = "https://github.com/renatocaliari/starstream"
+Documentation = "https://github.com/renatocaliari/starstream#readme"
+Issues = "https://github.com/renatocaliari/starstream/issues"
+Changelog = "https://github.com/renatocaliari/starstream/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["starstream"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W", "I", "N", "D", "UP", "B", "C4", "SIM",
+]
+ignore = [
+    "D100", "D104",
+]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true
