@@ -2,8 +2,9 @@
 Broadcast metrics for monitoring and observability.
 """
 
-from dataclasses import dataclass, field
 from collections import deque
+from dataclasses import dataclass, field
+from typing import Any, Deque
 
 
 @dataclass
@@ -17,7 +18,7 @@ class BroadcastMetrics:
 
     success_count: int = 0
     error_count: int = 0
-    latency_samples: deque = field(default_factory=lambda: deque(maxlen=100))
+    latency_samples: Deque[float] = field(default_factory=lambda: deque(maxlen=100))
 
     def record_success(self, latency: float):
         """Record successful broadcast with latency in seconds."""
@@ -28,7 +29,7 @@ class BroadcastMetrics:
         """Record broadcast error."""
         self.error_count += 1
 
-    def get_stats(self) -> dict:
+    def get_stats(self) -> Any:
         """Return statistics dictionary."""
         if not self.latency_samples:
             return {"success": self.success_count, "error": self.error_count}
