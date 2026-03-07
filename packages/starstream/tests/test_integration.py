@@ -55,7 +55,7 @@ class TestPluginIntegration:
         await asyncio.sleep(0.1)
 
         # Broadcast manually
-        await plugin.broadcast_to_topic("manual-test", "Manual message")
+        await plugin.broadcast("Manual message", "manual-test")
 
         try:
             await asyncio.wait_for(task, timeout=1.0)
@@ -78,7 +78,7 @@ class TestPluginIntegration:
         task = asyncio.create_task(subscriber())
         await asyncio.sleep(0.1)
 
-        await plugin.broadcast_to_room("general", "Room message")
+        await plugin.broadcast("Room message", "room:general")
 
         try:
             await asyncio.wait_for(task, timeout=1.0)
@@ -100,7 +100,7 @@ class TestPluginIntegration:
         task = asyncio.create_task(subscriber())
         await asyncio.sleep(0.1)
 
-        await plugin.send_to_user("john", "Private message")
+        await plugin.broadcast("Private message", "user:john")
 
         try:
             await asyncio.wait_for(task, timeout=1.0)

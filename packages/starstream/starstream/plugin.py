@@ -295,19 +295,57 @@ class StarStreamPlugin:
 
         return wrapper
 
-    # Manual API methods for advanced usage
+    # Unified broadcast API - polimorfico por design
 
-    async def broadcast_to_topic(self, topic: str, message: Union[str, Tuple]):
-        """Manually broadcast to a specific topic."""
+    async def broadcast(
+        self,
+        message: Union[str, Tuple],
+        target: Union[str, Dict, None] = None,
+        exclude: Optional[List[str]] = None,
+    ):
+        """
+        Broadcast message with unified API.
+
+        Args:
+            message: Message to broadcast (str or Datastar tuple)
+            target: Where to broadcast:
+                - str: topic name (auto-detects room:/user: prefixes)
+                - dict: {"type": "room|user|topic", "id": "..."}
+                - None: uses auto-detected topic from route
+            exclude: List of user_ids to exclude
+
+        Examples:
+            # Single target (convenção sobre configuração)
+            await stream.broadcast("Hello!")  # Auto-detect
+            await stream.broadcast("Hello!", "global")
+            await stream.broadcast("Hello!", "room:123")
+            await stream.broadcast("Hello!", "user:456")
+
+            # Dict target (explícito)
+            await stream.broadcast("Hello!", {"type": "room", "id": "123"})
+            await stream.broadcast("Hello!", {"type": "user", "id": "456"})
+
+            # Exclude users
+            await stream.broadcast("Hello!", exclude=["user_1"])
+        """
+        # Resolve target
+        if target is None:
+            topic = self.default_topic
+        elif isinstance(target, str):
+            # Convenção: se já tem prefixo, usa direto; senão assume tópico
+            if ":" in target:
+                topic = target
+            else:
+                topic = target
+        elif isinstance(target, dict):
+            t_type = target.get("type", "topic")
+            t_id = target.get("id", "global")
+            topic = f"{t_type}:{t_id}" if t_type != "topic" else t_id
+        else:
+            topic = self.default_topic
+
+        # Broadcast (exclude será implementado no futuro)
         await self.core.broadcast(message, topic=topic)
-
-    async def broadcast_to_room(self, room_id: str, message: Union[str, Tuple]):
-        """Broadcast to a specific room."""
-        await self.core.broadcast(message, topic=f"room:{room_id}")
-
-    async def send_to_user(self, user_id: str, message: Union[str, Tuple]):
-        """Send message to a specific user."""
-        await self.core.broadcast(message, topic=f"user:{user_id}")
 
     async def broadcast_exclude(
         self,
@@ -323,6 +361,32 @@ class StarStreamPlugin:
     def get_stream_url(self, topic: str = "global") -> str:
         """Get the SSE stream URL for a topic."""
         return f"/starstream?topic={topic}"
+
+    def get_stream_element(self, topic: Union[str, list] = "global") -> Union[Div, list[Div]]:
+        """Get Datastar stream element(s) for topic(s).
+
+        Args:
+            topic: Single topic (str) or list of topics (list[str])
+
+        Returns:
+            Single Div element if topic is str, list of Div elements if topic is list
+
+        Examples:
+            >>> stream.get_stream_element("chat:123")  # Single topic
+            <div data-star-sse="connect:/starstream?topic=chat:123"></div>
+
+            >>> stream.get_stream_element(["chat:123", "notifications"])  # Multiple topics
+            [<div data-star-sse="connect:/starstream?topic=chat:123"></div>,
+             <div data-star-sse="connect:/starstream?topic=notifications"></div>]
+        """
+        from starhtml import Div
+
+        if isinstance(topic, list):
+            # Multiple topics - return list of elements
+            return [Div(data_star_sse=f"connect:{self.get_stream_url(t)}") for t in topic]
+        else:
+            # Single topic - return single element
+            return Div(data_star_sse=f"connect:{self.get_stream_url(topic)}")
 
 
 # Helper functions for common patterns
@@ -377,6 +441,4 @@ class AutoUser:
 
     async def notify(self, user_id: str, notification: str):
         """Send notification to user."""
-        await self.plugin.send_to_user(
-            user_id, ("signals", {"notification": notification})
-        )
+        await self.plugin.send_to_user(user_id, ("signals", {"notification": notification}))

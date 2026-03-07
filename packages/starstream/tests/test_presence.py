@@ -4,7 +4,8 @@ Unit tests for Presence System.
 
 import pytest
 import asyncio
-from starstream.presence import Presence, PresenceEntry
+from starstream.presence import Presence
+from starstream.tracker import TopicEntry
 
 
 class TestPresence:
@@ -13,10 +14,8 @@ class TestPresence:
     @pytest.fixture
     async def presence(self):
         """Fresh presence instance."""
-        p = Presence(expire_after=30, check_interval=1)
-        await p.start()
+        p = Presence(expire_after=30)
         yield p
-        await p.stop()
 
     @pytest.mark.asyncio
     async def test_join_adds_user(self, presence):
@@ -94,16 +93,17 @@ class TestPresence:
     @pytest.mark.asyncio
     async def test_auto_expire_removes_inactive_users(self, presence):
         """Verify expired users are automatically removed."""
-        # Create presence with short expiration
-        p = Presence(expire_after=0.5, check_interval=0.1)
+        # Create presence with short expiration and check interval
+        p = Presence(expire_after=1)
+        p.check_interval = 0.5  # Check every 0.5s for faster test
         await p.start()
 
         try:
             await p.join("room:123", "user_1")
             assert await p.is_online("room:123", "user_1") is True
 
-            # Wait for expiration
-            await asyncio.sleep(1.0)
+            # Wait for expiration (> expire_after + check_interval)
+            await asyncio.sleep(2.0)
 
             # User should be removed
             assert await p.is_online("room:123", "user_1") is False

@@ -28,6 +28,7 @@ With features:
 
 from .plugin import StarStreamPlugin
 from .conventions import AutoTopic, AutoRoom, AutoUser
+from .tracker import TopicTracker, TopicEntry
 from .presence import Presence
 from .typing import TypingIndicator
 from .cursor import CursorTracker
@@ -39,6 +40,8 @@ from .helpers import throttle, debounce, RateLimiter, MessageBuilder
 __version__ = "0.1.0"
 __all__ = [
     "StarStreamPlugin",
+    "TopicTracker",
+    "TopicEntry",
     "AutoTopic",
     "AutoRoom",
     "AutoUser",

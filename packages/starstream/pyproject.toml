@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "starstream"
-version = "0.1.0-alpha.1"
+version = "0.1.0"
 description = "Convention over Configuration for StarHTML Real-time Broadcasting"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
-    {name = "Cali (Renato Caliari)", email = "renatoac82@gmail.com"}
+    {name = "Cali", email = "cali@example.com"}
 ]
 keywords = [
     "starhtml",
@@ -22,7 +22,7 @@ keywords = [
     "collaboration"
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -46,17 +46,15 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.5.0",
 ]
-all = [
-    "starstream-pocketbase",
-    "starstream-loro",
+loro = [
+    "loro>=1.0.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/renatocaliari/starstream"
-Repository = "https://github.com/renatocaliari/starstream"
-Documentation = "https://github.com/renatocaliari/starstream#readme"
-Issues = "https://github.com/renatocaliari/starstream/issues"
-Changelog = "https://github.com/renatocaliari/starstream/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/anomalyco/starstream"
+Repository = "https://github.com/anomalyco/starstream"
+Issues = "https://github.com/anomalyco/starstream/issues"
+Documentation = "https://github.com/anomalyco/starstream#readme"
 
 [tool.hatch.build.targets.wheel]
 packages = ["starstream"]
@@ -64,7 +62,7 @@ packages = ["starstream"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-addopts = "-v --tb=short"
+addopts = "-v"
 
 [tool.ruff]
 target-version = "py310"
@@ -72,10 +70,20 @@ line-length = 100
 
 [tool.ruff.lint]
 select = [
-    "E", "F", "W", "I", "N", "D", "UP", "B", "C4", "SIM",
+    "E",   # pycodestyle errors
+    "F",   # Pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "N",   # pep8-naming
+    "D",   # pydocstyle
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
 ]
 ignore = [
-    "D100", "D104",
+    "D100",  # Missing docstring in public module
+    "D104",  # Missing docstring in public package
 ]
 
 [tool.mypy]

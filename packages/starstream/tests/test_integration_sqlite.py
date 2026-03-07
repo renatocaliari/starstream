@@ -140,8 +140,8 @@ class TestSQLiteIntegration:
         await asyncio.sleep(0.1)
 
         # Broadcast messages
-        await plugin.broadcast_to_topic("global", "Message 1")
-        await plugin.broadcast_to_topic("global", "Message 2")
+        await plugin.broadcast("Message 1", "global")
+        await plugin.broadcast("Message 2", "global")
 
         try:
             await asyncio.wait_for(task, timeout=2.0)
