@@ -1,9 +1,9 @@
 ---
-name: building-realtime-starhtml-apps
+name: starstream
 description: Adds real-time broadcasting, multi-user collaboration, and database persistence to StarHTML applications. Use when implementing chat systems, collaborative editors, presence tracking, typing indicators, or any feature requiring synchronized state across clients. Supports core StarStream (broadcasting), PocketBase (persistence), and Loro (CRDT) plugins.
 ---
 
-# Building Real-time StarHTML Apps
+# StarStream: Real-time Collaboration for StarHTML
 
 StarStream provides a "convention over configuration" approach to real-time features in StarHTML. Follow these instructions to implement synchronized user experiences.
 
@@ -35,42 +35,17 @@ async def chat(room_id: str, msg: str):
 
 ## Plugin Selection Guide
 
-| Plugin | Use Case | Implementation File |
-| :--- | :--- | :--- |
-| **StarStreamCore** | Simple broadcasting, ephemeral state. | `starstream/plugin.py` |
-| **PocketBase** | Persistent data with real-time sync. | `starstream_pocketbase/plugin.py` |
-| **Loro** | Multi-user document editing (CRDT). | `starstream_loro/plugin.py` |
-
-### Using PocketBase for Persistence
-```python
-from starstream_pocketbase import PocketBasePlugin
-
-pb = PocketBasePlugin(stream, base_url="http://localhost:8090")
-await pb.authenticate(email, password)
-
-# CRUD operations auto-broadcast to relevant topics
-await pb.create("messages", {"text": "Hello", "room": room_id})
-```
-
-### Using Loro for Collaborative Editing
-```python
-from starstream_loro import LoroPlugin
-
-loro = LoroPlugin(stream)
-# Connect to a shared document
-await loro.connect(doc_id, user_id)
-# Sync deltas across peers
-await loro.receive_delta(doc_id, user_id, delta_bytes)
-```
+- **StarStreamCore**: Simple broadcasting, ephemeral state.
+- **PocketBase**: Persistent data with real-time sync.
+- **Loro**: Multi-user document editing (CRDT).
 
 ## Implementation Checklist
 
 - [ ] `StarStreamPlugin` initialized with `app`.
-- [ ] SSE endpoint `/stream` registered: `app.route("/stream")(stream.get_sse_response)`.
+- [ ] SSE endpoint `/stream` registered.
 - [ ] Frontend uses `stream.get_stream_element(topic)`.
 - [ ] Route parameters match topic conventions (e.g., `{room_id}` -> `room:{id}`).
 - [ ] (Optional) Presence/Typing heartbeats implemented in frontend.
-- [ ] (Optional) Rate limiting applied for high-frequency updates (cursors).
 
 ## Validation & Testing
 
@@ -84,14 +59,7 @@ pytest tests/test_core.py tests/test_presence.py
 python examples/full_features.py
 ```
 
-### Common Debugging Steps
-- **No updates?** Check if the client is connected to `/stream?topic=...`.
-- **Wrong topic?** Verify `StarStreamPlugin`'s `topic_detector` logic in `conventions.py`.
-- **Performance lag?** Ensure `CursorTracker` is throttled (default 50ms).
+## Resources
 
-## Resources & Progressive Disclosure
-
-- **Architecture**: See `starstream/plugin.py` for core logic.
-- **Conventions**: Refer to `starstream/conventions.py` for topic detection rules.
+- See `REFERENCE.md` for detailed plugin API and advanced usage.
 - **Full Demo**: `examples/full_features.py` shows all features integrated.
-- **API Reference**: Read `starstream/__init__.py` for available exports.
