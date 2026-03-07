@@ -27,6 +27,8 @@ With features:
 """
 
 from .plugin import StarStreamPlugin
+from .core import StarStreamCore
+from .metrics import BroadcastMetrics
 from .conventions import AutoTopic, AutoRoom, AutoUser
 from .tracker import TopicTracker, TopicEntry
 from .presence import Presence
@@ -40,6 +42,8 @@ from .helpers import throttle, debounce, RateLimiter, MessageBuilder
 __version__ = "0.1.0"
 __all__ = [
     "StarStreamPlugin",
+    "StarStreamCore",
+    "BroadcastMetrics",
     "TopicTracker",
     "TopicEntry",
     "AutoTopic",
