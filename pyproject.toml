@@ -36,7 +36,11 @@ classifiers = [
 dependencies = [
     "starhtml>=0.1.0",
     "aiofiles>=23.0.0",
+    "click>=8.0.0",
 ]
+
+[project.scripts]
+starstream = "starstream.cli:main"
 
 [project.optional-dependencies]
 dev = [

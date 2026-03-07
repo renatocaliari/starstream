@@ -37,7 +37,7 @@ from .storage.base import StorageBackend
 from .storage.sqlite import SQLiteBackend
 from .helpers import throttle, debounce, RateLimiter, MessageBuilder
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = [
     "StarStreamPlugin",
     "TopicTracker",
