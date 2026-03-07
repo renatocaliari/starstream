@@ -1,7 +1,13 @@
 import click
 import subprocess
 import sys
+import os
 from pathlib import Path
+
+def detect_manager():
+    if Path("uv.lock").exists() or Path("pyproject.toml").exists():
+        return "uv"
+    return "pip"
 
 @click.group()
 def main():
@@ -11,10 +17,8 @@ def main():
 @main.command()
 @click.argument('project_name', default='starstream-app')
 def init(project_name):
-    """Initialize a new StarStream project with zero-config."""
+    """Create a brand new StarStream project."""
     click.echo(f"🚀 Creating StarStream project: {project_name}...")
-    
-    # Create basic structure
     Path(project_name).mkdir(exist_ok=True)
     app_py = Path(project_name) / "app.py"
     
@@ -45,23 +49,57 @@ async def send(msg: str):
 
 serve()
 """)
-        click.echo(f"✅ Created {app_py}")
-    
-    click.echo("\nTo run your app:")
-    click.echo(f"  cd {project_name}")
-    click.echo("  uv run app.py")
+    click.echo(f"✅ Created {project_name}/app.py")
+    click.echo(f"👉 Run: cd {project_name} && uv run app.py")
 
 @main.command()
-@click.argument('plugin_name')
-def install(plugin_name):
-    """Install a StarStream plugin (loro, pocketbase)."""
-    full_name = f"starstream-{plugin_name}"
-    click.echo(f"📦 Installing plugin: {full_name}...")
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", full_name])
-        click.echo(f"✅ Plugin {plugin_name} installed successfully.")
-    except Exception as e:
-        click.echo(f"❌ Error installing plugin: {e}", err=True)
+@click.option('--file', default='app.py', help='The file to inject StarStream into.')
+def add(file):
+    """Add StarStream to an EXISTING StarHTML project."""
+    manager = detect_manager()
+    click.echo(f"📦 Detected project manager: {manager}")
+    
+    # 1. Install
+    if manager == "uv":
+        subprocess.run(["uv", "add", "starstream"])
+    else:
+        subprocess.run([sys.executable, "-m", "pip", "install", "starstream"])
+    
+    # 2. Inject Boilerplate
+    path = Path(file)
+    if not path.exists():
+        click.echo(f"❌ Could not find {file}. Please run in the root of your StarHTML project.")
+        return
+
+    content = path.read_text()
+    if "StarStreamPlugin" in content:
+        click.echo(f"ℹ️ StarStream already detected in {file}")
+    else:
+        click.echo(f"🔧 Injecting StarStream into {file}...")
+        
+        # Simple injection logic
+        new_imports = "from starstream import StarStreamPlugin\n" + content
+        if "app, rt = star_app()" in new_imports:
+            new_content = new_imports.replace(
+                "app, rt = star_app()", 
+                "app, rt = star_app()\nstream = StarStreamPlugin(app, enable_history=True)"
+            )
+            path.write_text(new_content)
+            click.echo(f"✅ Successfully integrated StarStream into {file}")
+        else:
+            click.echo("⚠️ Could not find 'star_app()' call. Please add 'stream = StarStreamPlugin(app)' manually.")
+
+@main.command()
+@click.argument('plugin')
+def install(plugin):
+    """Install extra plugins: loro, pocketbase."""
+    manager = detect_manager()
+    pkg = f"starstream-{plugin}"
+    if manager == "uv":
+        subprocess.run(["uv", "add", pkg])
+    else:
+        subprocess.run([sys.executable, "-m", "pip", "install", pkg])
+    click.echo(f"✅ Plugin {plugin} added.")
 
 if __name__ == "__main__":
     main()

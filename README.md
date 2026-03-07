@@ -6,8 +6,6 @@ Convention over Configuration for building real-time collaborative applications 
 
 ## 📦 Packages
 
-This monorepo contains the StarStream ecosystem:
-
 | Package | Description | Install |
 |---------|-------------|---------|
 | **starstream** | Core broadcasting with zero config | `pip install starstream` |
@@ -16,20 +14,27 @@ This monorepo contains the StarStream ecosystem:
 
 ## 🚀 Quick Start
 
-The fastest way to start a new project is using the StarStream CLI (requires [uv](https://astral.sh/uv)):
-
+### For New Projects
+Create a ready-to-run StarHTML app with StarStream pre-configured:
 ```bash
 uvx starstream init my-app
-cd my-app
-uv run app.py
+cd my-app && uv run app.py
 ```
 
-### Manual Installation
-```python
-from starhtml import *
-from starstream import StarStreamPlugin
-...
-StarStream comes with a pre-configured `SKILL.md` for AI agents. This skill provides expert instructions for building real-time applications, managing presence, and integrating Loro or PocketBase.
+### For Existing Projects
+Add StarStream to your current StarHTML app automatically (detects uv/pip):
+```bash
+uvx starstream add --file app.py
+```
+*This command installs the package and injects the `StarStreamPlugin` boilerplate into your code.*
+
+## 🛠 AI Agent Skills
+
+StarStream includes a `SKILL.md` for AI agents. This skill provides expert instructions for building real-time apps. 
+Agents can install it via:
+```bash
+npx skills add renatocaliari/starstream
+```
 
 ## 📁 Structure
 
@@ -37,11 +42,10 @@ StarStream comes with a pre-configured `SKILL.md` for AI agents. This skill prov
 starstream-monorepo/
 ├── packages/
 │   ├── starstream/              # Core package
-│   │   ├── starstream/          # Source code
-│   │   ├── tests/               # 114 tests
-│   │   └── examples/            # Usage examples
 │   ├── starstream-loro/         # CRDT plugin
 │   └── starstream-pocketbase/   # Database plugin
+├── skills/
+│   └── starstream/              # Agent skill (SKILL.md)
 ├── README.md
 └── LICENSE
 ```
