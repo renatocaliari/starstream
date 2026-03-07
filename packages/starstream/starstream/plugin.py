@@ -7,12 +7,16 @@ with zero configuration by default.
 
 import asyncio
 import json
+import logging
 import re
-from typing import Any, Dict, Optional, Set, Callable, Union, Tuple, List
+import time
+from collections import defaultdict
 from functools import wraps
+from typing import Any, Dict, Optional, Set, Callable, Union, Tuple, List
 from starlette.responses import StreamingResponse
 
 from .core import StarStreamCore
+from .metrics import BroadcastMetrics
 
 
 class StarStreamPlugin:
@@ -57,6 +61,10 @@ class StarStreamPlugin:
         self._interceptors: Dict[str, Callable] = {}
         self._configurations: Dict[str, Dict] = {}
         self.storage = storage
+
+        # Metrics and error handling
+        self._metrics = defaultdict(BroadcastMetrics)
+        self.on_broadcast_error = None
 
         # Optional features
         self.presence = None
@@ -294,6 +302,101 @@ class StarStreamPlugin:
         else:
             # Single topic - return single element
             return Div(data_star_sse=f"connect:{self.get_stream_url(topic)}")
+
+    def schedule_broadcast(
+        self,
+        background,
+        message: Union[str, Tuple],
+        target: Union[str, Dict, None] = None,
+    ):
+        """
+        Schedule broadcast for execution after SSE response.
+
+        Use this method in SSE handlers (sync generators with yield)
+        to schedule broadcast to other clients after the response
+        has been sent.
+
+        Args:
+            background: BackgroundTasks (injected by Starlette)
+            message: Message to broadcast (str, tuple, or StarHTML elements)
+            target: Target topic (str or dict). Auto-detected if None.
+
+        Example:
+            @rt("/todos")
+            @sse
+            def delete_todo(todo_id: str, background: BackgroundTasks):
+                delete_todo_db(todo_id)
+
+                stream.schedule_broadcast(
+                    background,
+                    elements(todo_list(), "#todos"),
+                    target="todos"
+                )
+
+                yield elements(todo_list(), "#todos")
+                yield signals()
+        """
+        topic = self._resolve_target(target)
+
+        background.add_task(self._do_broadcast_safe, message, topic)
+
+    async def _do_broadcast_safe(
+        self,
+        message: Union[str, Tuple],
+        topic: str,
+    ):
+        """
+        Internal: Broadcast with error handling and metrics.
+        """
+        logger = logging.getLogger("starstream")
+        start = time.time()
+
+        try:
+            await self.core.broadcast(message, topic)
+
+            latency = time.time() - start
+            self._metrics[topic].record_success(latency)
+
+            logger.debug(
+                f"Broadcast succeeded",
+                extra={"topic": topic, "latency_ms": round(latency * 1000, 2)},
+            )
+
+        except Exception as e:
+            self._metrics[topic].record_error()
+
+            logger.error(
+                f"Broadcast failed", extra={"topic": topic, "error": str(e)}, exc_info=True
+            )
+
+            if self.on_broadcast_error:
+                try:
+                    self.on_broadcast_error(topic, message, e)
+                except Exception as hook_error:
+                    logger.error(f"Broadcast error hook failed", extra={"error": str(hook_error)})
+
+    def _resolve_target(self, target: Union[str, Dict, None]) -> str:
+        """Resolve target to topic string."""
+        if target is None:
+            return self.default_topic
+        elif isinstance(target, str):
+            return target
+        elif isinstance(target, dict):
+            t_type = target.get("type", "topic")
+            t_id = target.get("id", "global")
+            return f"{t_type}:{t_id}" if t_type != "topic" else t_id
+        else:
+            return self.default_topic
+
+    def get_metrics(self, topic: str = None):
+        """Get broadcast metrics."""
+        if topic:
+            return self._metrics.get(topic, BroadcastMetrics()).get_stats()
+        return {t: m.get_stats() for t, m in self._metrics.items()}
+
+    def set_error_hook(self, hook):
+        """Set custom error handler for broadcast failures."""
+        self.on_broadcast_error = hook
 
 
 # Helper functions for common patterns
