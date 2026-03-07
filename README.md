@@ -23,12 +23,13 @@ from starstream import StarStreamPlugin
 app, rt = star_app()
 stream = StarStreamPlugin(app)  # That's it!
 
-@rt("/chat")
-@sse
-async def chat(msg: str):
-    yield elements(Div(msg), "#chat", "append")
-    # Auto-broadcasts to all clients!
+# When history or persistence is enabled, StarStream uses SQLite as the default backend.
+# No configuration required for local persistence.
 ```
+
+## 🛠 Skills & Agent Support
+
+StarStream comes with a pre-configured `SKILL.md` for AI agents. This skill provides expert instructions for building real-time applications, managing presence, and integrating Loro or PocketBase.
 
 ## 📁 Structure
 
