@@ -10,6 +10,15 @@ Real-time data persistence with automatic broadcasting on CRUD operations.
 pip install starstream-pocketbase
 ```
 
+## 🛠 AI Agent Skills
+
+StarStream includes a `SKILL.md` for AI agents. This skill provides expert instructions for building real-time apps.
+Agents can install it via:
+
+```bash
+npx skills add renatocaliari/starstream
+```
+
 ## Features
 
 - Database storage backend

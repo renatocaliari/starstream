@@ -30,7 +30,7 @@ uvx starstream add --file app.py
 
 ## 🛠 AI Agent Skills
 
-StarStream includes a `SKILL.md` for AI agents. This skill provides expert instructions for building real-time apps. 
+StarStream includes a `SKILL.md` for AI agents. This skill provides expert instructions for building real-time apps.
 Agents can install it via:
 ```bash
 npx skills add renatocaliari/starstream

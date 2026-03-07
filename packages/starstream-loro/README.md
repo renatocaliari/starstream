@@ -10,6 +10,15 @@ Provides conflict-free replicated data types (CRDT) support for collaborative ed
 pip install starstream-loro
 ```
 
+## 🛠 AI Agent Skills
+
+StarStream includes a `SKILL.md` for AI agents. This skill provides expert instructions for building real-time apps.
+Agents can install it via:
+
+```bash
+npx skills add renatocaliari/starstream
+```
+
 ## Features
 
 - Loro CRDT synchronization
