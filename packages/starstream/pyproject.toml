@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "starstream"
-version = "0.2.0"
+dynamic = ["version"]
 description = "Convention over Configuration for StarHTML Real-time Broadcasting"
 readme = "README.md"
 license = {text = "MIT"}
@@ -55,6 +55,9 @@ Homepage = "https://github.com/anomalyco/starstream"
 Repository = "https://github.com/anomalyco/starstream"
 Issues = "https://github.com/anomalyco/starstream/issues"
 Documentation = "https://github.com/anomalyco/starstream#readme"
+
+[tool.hatch.version]
+path = "starstream/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["starstream"]
