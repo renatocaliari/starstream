@@ -115,17 +115,17 @@ async def admin_message(msg: str):
 
 ### Manual API
 
-For complete control, use the manual API:
+For complete control, use the broadcast method:
 
 ```python
-# Broadcast to specific topic
-await stream.broadcast_to_topic("my-topic", message)
-
-# Send to specific user
-await stream.send_to_user(user_id, message)
+# Broadcast to topic
+stream.broadcast(message, target="my-topic")
 
 # Broadcast to room
-await stream.broadcast_to_room(room_id, message)
+stream.broadcast(message, target="room:123")
+
+# Send to user
+stream.broadcast(message, target="user:456")
 
 # Get stream URL
 url = stream.get_stream_url(topic="my-topic")
@@ -141,8 +141,9 @@ from starstream.helpers import throttle
 @rt("/cursor", methods=["POST"])
 @throttle(0.05)  # Max 20 updates/second
 async def cursor_update(x: int, y: int):
-    await stream.broadcast_to_topic("global", 
-        ('signals', {'cursor': {'x': x, 'y': y}})
+    stream.broadcast(
+        ('signals', {'cursor': {'x': x, 'y': y}}),
+        target="global"
     )
 ```
 
@@ -155,8 +156,9 @@ from starstream.helpers import debounce
 @debounce(0.5)  # Wait 500ms after last change
 async def save_document(doc_id: str, content: str):
     # Save and notify
-    await stream.broadcast_to_topic(f"doc:{doc_id}",
-        ('signals', {'saved': True})
+    stream.broadcast(
+        ('signals', {'saved': True}),
+        target=f"doc:{doc_id}"
     )
 ```
 
@@ -196,10 +198,9 @@ StarStreamPlugin(app, default_topic="global")
 **Methods:**
 
 - `configure(topic, exclude_self, filter_fn, broadcast)` - Decorator for custom config
-- `broadcast_to_topic(topic, message)` - Manual broadcast
-- `broadcast_to_room(room_id, message)` - Room broadcast
-- `send_to_user(user_id, message)` - User-specific message
+- `broadcast(message, target)` - Fire-and-forget broadcast
 - `get_stream_url(topic)` - Get SSE endpoint URL
+- `get_stream_element(topic)` - Get SSE connection element
 
 ### Helpers
 
@@ -226,8 +227,9 @@ async def join_room(room_id: str, user: str):
     
     # Broadcast who is online
     online_users = presence.get_online(room_id)
-    await stream.broadcast_to_room(room_id,
-        ('signals', {'online': online_users})
+    stream.broadcast(
+        ('signals', {'online': online_users}),
+        target=f"room:{room_id}"
     )
 
 @rt("/room/{room_id}/leave", methods=["POST"])
@@ -248,8 +250,9 @@ typing = TypingIndicator(auto_stop_seconds=5)
 async def user_typing(user: str, room_id: str):
     await typing.start(room_id, user)
     typers = typing.get_typing(room_id)
-    await stream.broadcast_to_room(room_id,
-        ('signals', {'typing': typers})
+    stream.broadcast(
+        ('signals', {'typing': typers}),
+        target=f"room:{room_id}"
     )
 ```
 
@@ -268,8 +271,9 @@ cursors = CursorTracker(update_throttle=0.05)
 async def cursor_update(x: int, y: int, user: str, room_id: str):
     await cursors.update(room_id, user, x, y)
     positions = cursors.get_positions(room_id)
-    await stream.broadcast_to_room(room_id,
-        ('signals', {'cursors': positions})
+    stream.broadcast(
+        ('signals', {'cursors': positions}),
+        target=f"room:{room_id}"
     )
 ```
 
