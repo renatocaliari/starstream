@@ -10,8 +10,7 @@ class LoroPlugin:
     """
     Loro CRDT plugin for StarStream.
 
-    Integrates Loro CRDTs with StarStream for automatic conflict-free
-    collaborative editing.
+    Convention over Configuration: One-line sync for collaborative editing.
 
     Example:
         from starhtml import *
@@ -23,18 +22,64 @@ class LoroPlugin:
         loro = LoroPlugin(stream)
 
         @rt("/doc/{doc_id}/sync", methods=["POST"])
-        async def sync_doc(doc_id: str, peer_id: str, delta: bytes):
-            # Automatic CRDT sync!
-            await loro.connect(doc_id, peer_id)
-            await loro.receive_delta(doc_id, peer_id, delta)
-            peers = await loro.get_peers(doc_id, exclude=peer_id)
-            for peer in peers:
-                await stream.send_to_user(peer, delta)
+        async def sync_doc(doc_id: str, delta: bytes, peer_id: str = None):
+            # One-line CRDT sync! Automatic broadcast to other peers.
+            await loro.sync(doc_id, delta, peer_id)
     """
 
-    def __init__(self, stream_plugin: StarStreamPlugin, storage=None):
+    def __init__(self, stream_plugin: StarStreamPlugin, storage=None, auto_peer_id: bool = False):
+        """
+        Initialize Loro plugin.
+
+        Args:
+            stream_plugin: StarStreamPlugin instance
+            storage: Optional storage backend
+            auto_peer_id: Auto-generate peer_id if not provided (default: False)
+        """
         self._stream = stream_plugin
         self._sync = LoroSyncManager(storage)
+        self._auto_peer = auto_peer_id
+
+    async def sync(self, doc_id: str, delta: bytes, peer_id: str = None) -> bool:
+        """
+        One-line CRDT sync.
+
+        Automatically:
+        1. Connects peer to document
+        2. Applies delta
+        3. Broadcasts to other peers
+
+        Args:
+            doc_id: Document ID
+            delta: CRDT delta bytes
+            peer_id: Optional peer ID (auto-generated if auto_peer_id=True)
+
+        Returns:
+            True if sync successful
+
+        Example:
+            await loro.sync("doc-123", delta_bytes, "user-456")
+        """
+        if not peer_id and self._auto_peer:
+            peer_id = self._get_auto_peer_id()
+
+        if not peer_id:
+            raise ValueError("peer_id required (or set auto_peer_id=True)")
+
+        await self.connect(doc_id, peer_id)
+        await self.receive_delta(doc_id, peer_id, delta)
+
+        peers = await self.get_peers(doc_id, exclude=peer_id)
+        for peer in peers:
+            self._stream.broadcast(delta, target=f"user:{peer}")
+
+        return True
+
+    def _get_auto_peer_id(self) -> str:
+        """Auto-generate peer ID."""
+        import uuid
+
+        return str(uuid.uuid4())[:8]
 
     async def connect(self, doc_id: str, peer_id: str) -> bool:
         """Connect a peer to a document"""
