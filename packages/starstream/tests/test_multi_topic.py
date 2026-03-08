@@ -71,8 +71,8 @@ class TestMultiTopicStreaming:
         await asyncio.sleep(0.1)
 
         # Broadcast to each topic
-        await plugin.broadcast("Hello chat!", "chat")
-        await plugin.broadcast("New notification!", "notifications")
+        plugin.broadcast("Hello chat!", "chat")
+        plugin.broadcast("New notification!", "notifications")
 
         try:
             await asyncio.wait_for(asyncio.gather(task1, task2), timeout=1.0)
