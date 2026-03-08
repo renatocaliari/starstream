@@ -301,26 +301,26 @@ async def send_message(user: str, msg: str, room_id: str):
 
 ### SQLite Storage Backend (Default)
 
-**SQLite is the default persistence backend** when you enable storage. No external database required.
+**SQLite is automatic** when you enable features that need persistence:
 
 ```python
-from starstream import StarStreamPlugin
-from starstream.storage import SQLiteBackend
-
-# SQLite backend - default, file-based persistence
-storage = SQLiteBackend("starstream.db")
+# SQLite auto-created at starstream.db
 stream = StarStreamPlugin(
     app,
-    storage=storage,  # Enable persistence with SQLite (default)
-    enable_presence=True,
-    enable_typing=True,
-    enable_cursor=True,
-    enable_history=True
+    enable_presence=True,  # Auto-uses SQLite
+    enable_history=True    # Auto-uses SQLite
 )
 ```
 
+**Custom SQLite path (optional):**
+
+```python
+from starstream.storage import SQLiteBackend
+stream = StarStreamPlugin(app, storage=SQLiteBackend("custom.db"))
+```
+
 **Other storage options:**
-- **PocketBase** - Database with admin UI, auth, file storage (see `starstream-pocketbase` plugin)
+- **PocketBase** - When you need auth, admin UI, or file storage (see `starstream-pocketbase`)
 - **Custom backend** - Implement your own `StorageBackend` ABC
 
 ## Examples
