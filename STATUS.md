@@ -59,6 +59,21 @@ Package Size: 23KB (wheel)
 Python Versions: 3.10, 3.11, 3.12
 ```
 
+## Changelog
+
+### v0.3.0 (2025-03-08)
+
+**Breaking Changes:**
+- Removed `schedule_broadcast()` - use `broadcast()` directly
+- Removed `broadcast_exclude()` - not implemented
+- Changed `broadcast()` from async to sync (fire-and-forget)
+
+**Improvements:**
+- Simplified API: one method for all broadcasting
+- No dependency on BackgroundTasks injection
+- Works seamlessly in SSE handlers
+- Fire-and-forget semantics (pub/sub pattern)
+
 ## 📦 Package Contents
 
 ```
