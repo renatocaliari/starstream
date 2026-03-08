@@ -301,7 +301,7 @@ async def send_message(user: str, msg: str, room_id: str):
 
 ### SQLite Storage Backend (Default)
 
-**SQLite is automatic** when you enable features that need persistence:
+**SQLite is automatic** when you enable features that need persistence. No imports, no configuration:
 
 ```python
 # SQLite auto-created at starstream.db
@@ -312,11 +312,28 @@ stream = StarStreamPlugin(
 )
 ```
 
-**Custom SQLite path (optional):**
+**Custom database path (optional):**
+
+```python
+# Custom SQLite location
+stream = StarStreamPlugin(
+    app,
+    enable_history=True,
+    db_path="my-app.db"  # Custom path
+)
+```
+
+**Advanced: Custom backend (optional):**
 
 ```python
 from starstream.storage import SQLiteBackend
-stream = StarStreamPlugin(app, storage=SQLiteBackend("custom.db"))
+
+# Only if you need custom SQLite configuration
+stream = StarStreamPlugin(
+    app,
+    enable_history=True,
+    storage=SQLiteBackend("custom.db", pragma={"journal_mode": "WAL"})
+)
 ```
 
 **Other storage options:**

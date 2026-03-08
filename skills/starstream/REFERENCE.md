@@ -13,12 +13,25 @@ The main entry point for real-time broadcasting.
 StarStreamPlugin(
     app,                    # StarHTML app instance
     default_topic="global", # Default topic for broadcasts
-    enable_presence=False,  # Track online users
+    enable_presence=False,  # Track online users (auto-SQLite)
     enable_typing=False,    # Show who's typing
     enable_cursors=False,   # Track mouse positions
-    enable_history=False,   # Store message history
-    storage=None,           # SQLite backend (auto if True)
+    enable_history=False,   # Store message history (auto-SQLite)
+    db_path=None,           # Custom SQLite path (optional)
+    storage=None,           # Override with custom backend (optional)
 )
+```
+
+**Convention over Configuration:**
+```python
+# 90% case: Zero config, SQLite auto-created
+stream = StarStreamPlugin(app, enable_history=True)
+
+# 9% case: Custom SQLite path
+stream = StarStreamPlugin(app, enable_history=True, db_path="app.db")
+
+# 1% case: Custom backend
+stream = StarStreamPlugin(app, storage=PostgreSQLBackend(...))
 ```
 
 **Methods:**

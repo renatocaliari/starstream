@@ -53,14 +53,43 @@ class StarStreamPlugin:
         enable_typing: bool = False,
         enable_cursors: bool = False,
         enable_history: bool = False,
+        db_path: str = None,
         storage=None,
     ):
+        """
+        Initialize StarStream plugin.
+
+        Convention over Configuration:
+        - enable_history=True automatically creates SQLite storage
+        - Use db_path to customize SQLite database location
+        - Use storage to override with custom backend
+
+        Args:
+            app: StarHTML app instance
+            default_topic: Default topic for broadcasts
+            enable_presence: Track online users
+            enable_typing: Show typing indicators
+            enable_cursors: Track mouse positions
+            enable_history: Enable message history (auto-creates SQLite)
+            db_path: Custom SQLite database path (optional, default: starstream.db)
+            storage: Custom storage backend (optional, overrides auto-creation)
+        """
         self.app = app
         self.core = StarStreamCore()
         self.default_topic = default_topic
         self._interceptors: Dict[str, Callable] = {}
         self._configurations: Dict[str, Dict] = {}
-        self.storage = storage
+
+        # Auto-create SQLite storage if history enabled and no custom storage provided
+        if storage:
+            self.storage = storage
+        elif enable_history:
+            from .storage.sqlite import SQLiteBackend
+
+            auto_db_path = db_path or "starstream.db"
+            self.storage = SQLiteBackend(auto_db_path)
+        else:
+            self.storage = None
 
         # Metrics and error handling
         self._metrics = defaultdict(BroadcastMetrics)
