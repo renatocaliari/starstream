@@ -59,6 +59,52 @@ pytest tests/test_core.py tests/test_presence.py
 python examples/full_features.py
 ```
 
+## Broadcasting
+
+Fire-and-forget broadcast to all connected clients:
+
+```python
+@rt("/todos/add", methods=["POST"])
+@sse
+def add_todo(text: str):
+    todos.append(text)
+    
+    # Broadcast to all clients
+    stream.broadcast(
+        elements(render_todos(), "#todo-list"),
+        target="todos"
+    )
+    
+    # Response to current client
+    yield elements(render_todos(), "#todo-list")
+```
+
+### Targets
+
+```python
+# Topic
+stream.broadcast(msg, target="chat")
+
+# Room
+stream.broadcast(msg, target="room:123")
+
+# User
+stream.broadcast(msg, target="user:456")
+
+# Default (global)
+stream.broadcast(msg)
+```
+
+### Observability
+
+```python
+# Metrics
+stats = stream.get_metrics("todos")
+
+# Error handling
+stream.set_error_hook(lambda topic, msg, err: logger.error(f"{topic}: {err}"))
+```
+
 ## Resources
 
 - See `REFERENCE.md` for detailed plugin API and advanced usage.
