@@ -3,7 +3,6 @@ Test multiple topics streaming.
 """
 
 import pytest
-from starhtml import Div
 from starstream import StarStreamPlugin
 
 
@@ -15,9 +14,10 @@ class TestMultiTopicStreaming:
         plugin = StarStreamPlugin(mock_app)
         element = plugin.get_stream_element("chat:123")
 
-        # Check that element contains the correct SSE URL
         element_str = str(element)
-        assert 'data-star-sse="connect:/starstream?topic=chat:123"' in element_str
+        assert "data-init" in element_str
+        assert "/starstream?topic=chat:123" in element_str
+        assert "openWhenHidden" in element_str
         assert "<div" in element_str
 
     def test_get_stream_element_multiple(self, mock_app):
@@ -27,10 +27,11 @@ class TestMultiTopicStreaming:
 
         assert isinstance(elements, list)
         assert len(elements) == 3
-        # Check each element contains correct SSE URL
-        assert 'data-star-sse="connect:/starstream?topic=chat:123"' in str(elements[0])
-        assert 'data-star-sse="connect:/starstream?topic=notifications"' in str(elements[1])
-        assert 'data-star-sse="connect:/starstream?topic=presence"' in str(elements[2])
+
+        assert "data-init" in str(elements[0])
+        assert "/starstream?topic=chat:123" in str(elements[0])
+        assert "/starstream?topic=notifications" in str(elements[1])
+        assert "/starstream?topic=presence" in str(elements[2])
 
     def test_get_stream_element_empty_list(self, mock_app):
         """Test getting stream elements with empty list."""
@@ -45,8 +46,8 @@ class TestMultiTopicStreaming:
         plugin = StarStreamPlugin(mock_app)
         element = plugin.get_stream_element()
 
-        # Default topic is "global"
-        assert 'data-star-sse="connect:/starstream?topic=global"' in str(element)
+        assert "data-init" in str(element)
+        assert "/starstream?topic=global" in str(element)
 
     @pytest.mark.asyncio
     async def test_broadcast_to_multiple_topics(self, mock_app):

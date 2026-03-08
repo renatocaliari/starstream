@@ -12,11 +12,14 @@ import re
 import time
 from collections import defaultdict
 from functools import wraps
-from typing import Any, Dict, Optional, Set, Callable, Union, Tuple, List
+from typing import Any, Dict, Optional, Set, Callable, Union, Tuple, List, TYPE_CHECKING
 from starlette.responses import StreamingResponse
 
 from .core import StarStreamCore
 from .metrics import BroadcastMetrics
+
+if TYPE_CHECKING:
+    from starhtml import Div
 
 
 class StarStreamPlugin:
@@ -275,7 +278,7 @@ class StarStreamPlugin:
         """Get the SSE stream URL for a topic."""
         return f"/starstream?topic={topic}"
 
-    def get_stream_element(self, topic: Union[str, list] = "global") -> Union[Div, list[Div]]:
+    def get_stream_element(self, topic: Union[str, list] = "global") -> Union["Div", list["Div"]]:
         """Get Datastar stream element(s) for topic(s).
 
         Args:
@@ -286,20 +289,21 @@ class StarStreamPlugin:
 
         Examples:
             >>> stream.get_stream_element("chat:123")  # Single topic
-            <div data-star-sse="connect:/starstream?topic=chat:123"></div>
+            <div data-init="@get('/starstream?topic=chat:123', {openWhenHidden: true})"></div>
 
             >>> stream.get_stream_element(["chat:123", "notifications"])  # Multiple topics
-            [<div data-star-sse="connect:/starstream?topic=chat:123"></div>,
-             <div data-star-sse="connect:/starstream?topic=notifications"></div>]
+            [<div data-init="@get('/starstream?topic=chat:123', {openWhenHidden: true})"></div>,
+             <div data-init="@get('/starstream?topic=notifications', {openWhenHidden: true})"></div>]
         """
         from starhtml import Div
 
         if isinstance(topic, list):
-            # Multiple topics - return list of elements
-            return [Div(data_star_sse=f"connect:{self.get_stream_url(t)}") for t in topic]
+            return [
+                Div(data_init=f"@get('{self.get_stream_url(t)}', {{openWhenHidden: true}})")
+                for t in topic
+            ]
         else:
-            # Single topic - return single element
-            return Div(data_star_sse=f"connect:{self.get_stream_url(topic)}")
+            return Div(data_init=f"@get('{self.get_stream_url(topic)}', {{openWhenHidden: true}})")
 
     async def _do_broadcast_safe(
         self,

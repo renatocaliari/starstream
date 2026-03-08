@@ -5,6 +5,7 @@ This example shows the simplest possible usage of StarStream.
 Just initialize the plugin and it works!
 """
 
+import asyncio
 from starhtml import *
 from starstream import StarStreamPlugin
 
@@ -22,6 +23,7 @@ stream = StarStreamPlugin(app)
 def home():
     return Titled(
         "StarStream Basic Demo",
+        stream.get_stream_element(),
         Div(
             H1("Global Chat"),
             Div(id="chat", cls="messages"),
@@ -73,6 +75,7 @@ async def notify(text: str, type_: str = "info"):
 def counter_page():
     return Titled(
         "Sync Counter",
+        stream.get_stream_element(),
         Div(
             H1("Shared Counter"),
             Div(

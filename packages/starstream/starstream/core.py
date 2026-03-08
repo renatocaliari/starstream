@@ -65,7 +65,12 @@ class StarStreamCore:
                         lines.append(f"data: elements {line}")
 
             elif msg[0] == "signals":
-                for line in json.dumps(payload).splitlines():
+                # Handle starhtml signals format: {'payload': {...}, 'options': {...}}
+                if isinstance(payload, dict) and "payload" in payload:
+                    signals_data = payload["payload"]
+                else:
+                    signals_data = payload
+                for line in json.dumps(signals_data).splitlines():
                     lines.append(f"data: signals {line}")
 
             return "\n".join(lines) + "\n\n"
