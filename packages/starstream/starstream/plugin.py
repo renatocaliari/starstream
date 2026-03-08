@@ -303,43 +303,6 @@ class StarStreamPlugin:
             # Single topic - return single element
             return Div(data_star_sse=f"connect:{self.get_stream_url(topic)}")
 
-    def schedule_broadcast(
-        self,
-        background,
-        message: Union[str, Tuple],
-        target: Union[str, Dict, None] = None,
-    ):
-        """
-        Schedule broadcast for execution after SSE response.
-
-        Use this method in SSE handlers (sync generators with yield)
-        to schedule broadcast to other clients after the response
-        has been sent.
-
-        Args:
-            background: BackgroundTasks (injected by Starlette)
-            message: Message to broadcast (str, tuple, or StarHTML elements)
-            target: Target topic (str or dict). Auto-detected if None.
-
-        Example:
-            @rt("/todos")
-            @sse
-            def delete_todo(todo_id: str, background: BackgroundTasks):
-                delete_todo_db(todo_id)
-
-                stream.schedule_broadcast(
-                    background,
-                    elements(todo_list(), "#todos"),
-                    target="todos"
-                )
-
-                yield elements(todo_list(), "#todos")
-                yield signals()
-        """
-        topic = self._resolve_target(target)
-
-        background.add_task(self._do_broadcast_safe, message, topic)
-
     async def _do_broadcast_safe(
         self,
         message: Union[str, Tuple],
