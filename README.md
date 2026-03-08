@@ -4,13 +4,27 @@
 
 Convention over Configuration for building real-time collaborative applications with StarHTML.
 
+## ✨ Features
+
+**Core (starstream):**
+- 📡 Real-time broadcasting (fire-and-forget)
+- 👥 Presence tracking (who's online)
+- ⌨️ Typing indicators
+- 🖱️ Cursor tracking
+- 💾 Message history with TTL
+- 🗄️ SQLite storage (automatic)
+
+**Plugins:**
+- 🔗 **starstream-loro** - CRDT for collaborative editing
+- 🗄️ **starstream-pocketbase** - Auth, admin UI, file storage
+
 ## 📦 Packages
 
 | Package | Description | Install |
 |---------|-------------|---------|
-| **starstream** | Core broadcasting with zero config | `pip install starstream` |
-| **starstream-loro** | CRDT integration for collaborative editing | `pip install starstream-loro` |
-| **starstream-pocketbase** | Database persistence with auto-broadcast | `pip install starstream-pocketbase` |
+| **starstream** | Core broadcasting + SQLite storage (auto) | `pip install starstream` |
+| **starstream-loro** | CRDT for collaborative editing | `pip install starstream-loro` |
+| **starstream-pocketbase** | Auth, admin UI, file storage | `pip install starstream-pocketbase` |
 
 ## 🚀 Quick Start
 
