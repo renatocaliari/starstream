@@ -39,7 +39,7 @@ from .storage.base import StorageBackend
 from .storage.sqlite import SQLiteBackend
 from .helpers import throttle, debounce, RateLimiter, MessageBuilder
 
-__version__ = "0.2.0"
+__version__ = "0.3.1"
 __all__ = [
     "StarStreamPlugin",
     "StarStreamCore",
