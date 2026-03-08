@@ -57,6 +57,9 @@ class LoroPlugin:
         Returns:
             True if sync successful
 
+        Raises:
+            ValueError: If peer_id is required but not provided
+
         Example:
             await loro.sync("doc-123", delta_bytes, "user-456")
         """
@@ -66,14 +69,19 @@ class LoroPlugin:
         if not peer_id:
             raise ValueError("peer_id required (or set auto_peer_id=True)")
 
-        await self.connect(doc_id, peer_id)
-        await self.receive_delta(doc_id, peer_id, delta)
+        try:
+            await self.connect(doc_id, peer_id)
+            await self.receive_delta(doc_id, peer_id, delta)
 
-        peers = await self.get_peers(doc_id, exclude=peer_id)
-        for peer in peers:
-            self._stream.broadcast(delta, target=f"user:{peer}")
+            peers = await self.get_peers(doc_id, exclude=peer_id)
+            for peer in peers:
+                self._stream.broadcast(
+                    delta.decode() if isinstance(delta, bytes) else delta, target=f"user:{peer}"
+                )
 
-        return True
+            return True
+        except Exception as e:
+            raise RuntimeError(f"Loro sync failed for doc {doc_id}: {e}") from e
 
     def _get_auto_peer_id(self) -> str:
         """Auto-generate peer ID."""

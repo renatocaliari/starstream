@@ -21,5 +21,5 @@ from .sync import LoroSyncManager
 from .storage import LoroStorage
 from .plugin import LoroPlugin
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = ["LoroSyncManager", "LoroStorage", "LoroPlugin"]
