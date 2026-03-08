@@ -25,7 +25,7 @@ class TestUnifiedBroadcast:
         await asyncio.sleep(0.1)
 
         # String target
-        await plugin.broadcast("Hello!", target="global")
+        plugin.broadcast("Hello!", target="global")
 
         try:
             await asyncio.wait_for(task, timeout=1.0)
@@ -49,7 +49,7 @@ class TestUnifiedBroadcast:
         task = asyncio.create_task(subscriber())
         await asyncio.sleep(0.1)
 
-        await plugin.broadcast("Room message!", target="room:123")
+        plugin.broadcast("Room message!", target="room:123")
 
         try:
             await asyncio.wait_for(task, timeout=1.0)
@@ -73,7 +73,7 @@ class TestUnifiedBroadcast:
         task = asyncio.create_task(subscriber())
         await asyncio.sleep(0.1)
 
-        await plugin.broadcast("User message!", target="user:456")
+        plugin.broadcast("User message!", target="user:456")
 
         try:
             await asyncio.wait_for(task, timeout=1.0)
@@ -97,7 +97,7 @@ class TestUnifiedBroadcast:
         task = asyncio.create_task(subscriber())
         await asyncio.sleep(0.1)
 
-        await plugin.broadcast("Dict target!", target={"type": "room", "id": "789"})
+        plugin.broadcast("Dict target!", target={"type": "room", "id": "789"})
 
         try:
             await asyncio.wait_for(task, timeout=1.0)
@@ -121,7 +121,7 @@ class TestUnifiedBroadcast:
         task = asyncio.create_task(subscriber())
         await asyncio.sleep(0.1)
 
-        await plugin.broadcast("Default topic!")  # No target
+        plugin.broadcast("Default topic!")  # No target
 
         try:
             await asyncio.wait_for(task, timeout=1.0)
@@ -146,7 +146,7 @@ class TestUnifiedBroadcast:
         await asyncio.sleep(0.1)
 
         # Unified broadcast method
-        await plugin.broadcast("Legacy message!", "legacy_topic")
+        plugin.broadcast("Legacy message!", "legacy_topic")
 
         try:
             await asyncio.wait_for(task, timeout=1.0)
@@ -177,8 +177,8 @@ class TestUnifiedBroadcast:
         await asyncio.sleep(0.1)
 
         # Broadcast to each
-        await plugin.broadcast("Chat msg", target="chat")
-        await plugin.broadcast("Notif msg", target="notifications")
+        plugin.broadcast("Chat msg", target="chat")
+        plugin.broadcast("Notif msg", target="notifications")
 
         try:
             await asyncio.wait_for(asyncio.gather(task1, task2), timeout=1.0)

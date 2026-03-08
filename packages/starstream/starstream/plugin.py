@@ -210,57 +210,37 @@ class StarStreamPlugin:
 
         return wrapper
 
-    # Unified broadcast API - polimorfico por design
+    # Unified broadcast API - fire-and-forget by design
 
-    async def broadcast(
+    def broadcast(
         self,
         message: Union[str, Tuple],
         target: Union[str, Dict, None] = None,
-        exclude: Optional[List[str]] = None,
     ):
         """
-        Broadcast message with unified API.
+        Fire-and-forget broadcast to subscribers.
+
+        Broadcasts are inherently fire-and-forget (pub/sub semantics).
+        Use metrics or logs for observability.
 
         Args:
-            message: Message to broadcast (str or Datastar tuple)
-            target: Where to broadcast:
-                - str: topic name (auto-detects room:/user: prefixes)
-                - dict: {"type": "room|user|topic", "id": "..."}
-                - None: uses auto-detected topic from route
-            exclude: List of user_ids to exclude
+            message: str, tuple, or StarHTML elements
+            target: str, dict, or None
 
-        Examples:
-            # Single target (convenção sobre configuração)
-            await stream.broadcast("Hello!")  # Auto-detect
-            await stream.broadcast("Hello!", "global")
-            await stream.broadcast("Hello!", "room:123")
-            await stream.broadcast("Hello!", "user:456")
-
-            # Dict target (explícito)
-            await stream.broadcast("Hello!", {"type": "room", "id": "123"})
-            await stream.broadcast("Hello!", {"type": "user", "id": "456"})
-
-            # Exclude users
-            await stream.broadcast("Hello!", exclude=["user_1"])
+        Example:
+            @rt("/todos/add", methods=["POST"])
+            @sse
+            def add_todo(text: str):
+                stream.broadcast(elements(...), target="todos")
+                yield elements(...)
         """
-        # Resolve target
-        if target is None:
-            topic = self.default_topic
-        elif isinstance(target, str):
-            # Convenção: se já tem prefixo, usa direto; senão assume tópico
-            if ":" in target:
-                topic = target
-            else:
-                topic = target
-        elif isinstance(target, dict):
-            t_type = target.get("type", "topic")
-            t_id = target.get("id", "global")
-            topic = f"{t_type}:{t_id}" if t_type != "topic" else t_id
-        else:
-            topic = self.default_topic
+        topic = self._resolve_target(target)
 
-        # Broadcast (exclude será implementado no futuro)
-        await self.core.broadcast(message, topic=topic)
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._do_broadcast_safe(message, topic))
+        except RuntimeError:
+            asyncio.run(self._do_broadcast_safe(message, topic))
 
     def get_stream_url(self, topic: str = "global") -> str:
         """Get the SSE stream URL for a topic."""
