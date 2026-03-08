@@ -262,17 +262,6 @@ class StarStreamPlugin:
         # Broadcast (exclude será implementado no futuro)
         await self.core.broadcast(message, topic=topic)
 
-    async def broadcast_exclude(
-        self,
-        exclude_user_ids: List[str],
-        message: Union[str, Tuple],
-        topic: str = "global",
-    ):
-        """Broadcast to all except specific users."""
-        # In a real implementation, we'd track user subscriptions
-        # For now, this is a placeholder
-        await self.core.broadcast(message, topic=topic)
-
     def get_stream_url(self, topic: str = "global") -> str:
         """Get the SSE stream URL for a topic."""
         return f"/starstream?topic={topic}"
