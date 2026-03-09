@@ -941,6 +941,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+collaborative = [
+    { name = "loro" },
+]
 dev = [
     { name = "mypy" },
     { name = "pytest" },
@@ -948,14 +951,11 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
 ]
-loro = [
-    { name = "loro" },
-]
 
 [package.metadata]
 requires-dist = [
     { name = "aiofiles", specifier = ">=23.0.0" },
-    { name = "loro", marker = "extra == 'loro'", specifier = ">=1.0.0" },
+    { name = "loro", marker = "extra == 'collaborative'", specifier = ">=1.0.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.5.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.21.0" },
@@ -963,7 +963,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "starhtml", specifier = ">=0.1.0" },
 ]
-provides-extras = ["dev", "loro"]
+provides-extras = ["collaborative", "dev"]
 
 [[package]]
 name = "typing-extensions"

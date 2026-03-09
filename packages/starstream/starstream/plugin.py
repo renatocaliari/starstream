@@ -56,6 +56,8 @@ class StarStreamPlugin:
         enable_typing: bool = False,
         enable_cursors: bool = False,
         enable_history: bool = False,
+        persist: bool = False,
+        collaborative: bool = False,
         db_path: str = None,
         storage=None,
     ):
@@ -63,7 +65,8 @@ class StarStreamPlugin:
         Initialize StarStream plugin.
 
         Convention over Configuration:
-        - enable_history=True automatically creates SQLite storage
+        - persist=True automatically creates SQLite storage
+        - collaborative=True enables CRDT-based collaborative editing
         - Use db_path to customize SQLite database location
         - Use storage to override with custom backend
 
@@ -73,7 +76,9 @@ class StarStreamPlugin:
             enable_presence: Track online users
             enable_typing: Show typing indicators
             enable_cursors: Track mouse positions
-            enable_history: Enable message history (auto-creates SQLite)
+            enable_history: (Deprecated) Use persist instead
+            persist: Enable persistence (auto-creates SQLite)
+            collaborative: Enable collaborative editing (requires loro)
             db_path: Custom SQLite database path (optional, default: starstream.db)
             storage: Custom storage backend (optional, overrides auto-creation)
         """
@@ -83,10 +88,13 @@ class StarStreamPlugin:
         self._interceptors: Dict[str, Callable] = {}
         self._configurations: Dict[str, Dict] = {}
 
-        # Auto-create SQLite storage if history enabled and no custom storage provided
+        # Handle backward compatibility: enable_history -> persist
+        should_persist = persist or enable_history
+
+        # Auto-create SQLite storage if persist enabled and no custom storage provided
         if storage:
             self.storage = storage
-        elif enable_history:
+        elif should_persist:
             from .storage.sqlite import SQLiteBackend
 
             auto_db_path = db_path or "starstream.db"
@@ -120,13 +128,46 @@ class StarStreamPlugin:
 
             self.cursors = CursorTracker()
 
-        if enable_history:
+        if should_persist:
             from .history import MessageHistory
 
             self.history = MessageHistory()
 
+        # Collaborative editing support (lazy loaded)
+        self._collaborative_enabled = collaborative
+        self._collaborative = None
+
         # Register stream endpoint
         self._register_stream_endpoint()
+
+    @property
+    def collaborative(self):
+        """
+        Access collaborative editing engine.
+
+        Raises:
+            RuntimeError: If collaborative editing not enabled
+            ImportError: If loro not installed
+        """
+        if not self._collaborative_enabled:
+            raise RuntimeError(
+                "Collaborative editing not enabled. "
+                "Initialize with: StarStreamPlugin(app, collaborative=True)"
+            )
+
+        if self._collaborative is None:
+            self._init_collaborative()
+
+        return self._collaborative
+
+    def _init_collaborative(self):
+        """Initialize collaborative editing engine (lazy load)."""
+        # Import here to avoid circular dependency
+        from .collaborative import CollaborativeEngine
+
+        # Note: Loro is checked when actually using CRDT features
+        # This allows the engine to be created even if Loro is not installed
+        self._collaborative = CollaborativeEngine(storage=self.storage)
 
     def _register_stream_endpoint(self):
         """Register the SSE stream endpoint."""

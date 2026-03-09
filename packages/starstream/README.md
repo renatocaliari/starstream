@@ -25,7 +25,11 @@ async def chat(msg: str):
 ## Installation
 
 ```bash
+# Core package (lightweight)
 pip install starstream
+
+# With collaborative editing support
+pip install starstream[collaborative]
 ```
 
 ## 🛠 AI Agent Skills
@@ -56,7 +60,32 @@ async def chat(msg: str):
 
 **That's it!** All connected clients automatically receive messages.
 
-### 2. Multi-Room Chat (Auto-Room Detection)
+### 2. Chat with Persistence
+
+```python
+# Messages are saved to SQLite automatically
+stream = StarStreamPlugin(app, persist=True)
+
+@rt("/chat", methods=["POST"])
+@sse
+async def chat(msg: str):
+    yield elements(Div(msg), "#chat", "append")
+    # Messages persist across restarts!
+```
+
+### 3. Collaborative Editing
+
+```python
+# Install: pip install starstream[collaborative]
+stream = StarStreamPlugin(app, collaborative=True)
+
+@rt("/doc/{doc_id}/sync", methods=["POST"])
+async def sync_doc(doc_id: str, delta: bytes, user_id: str):
+    # One-line CRDT sync! Automatic conflict resolution.
+    await stream.collaborative.sync(doc_id, delta, user_id)
+```
+
+### 4. Multi-Room Chat (Auto-Room Detection)
 
 ```python
 @rt("/room/{room_id}/send", methods=["POST"])
@@ -192,8 +221,25 @@ msg = MessageBuilder.signal_update(counter=42, status="active")
 ### StarStreamPlugin
 
 ```python
-StarStreamPlugin(app, default_topic="global")
+StarStreamPlugin(
+    app,
+    default_topic="global",
+    persist=False,           # Enable persistence (auto-creates SQLite)
+    collaborative=False,     # Enable collaborative editing (requires loro)
+    db_path=None,            # Custom SQLite path
+    storage=None,            # Custom storage backend
+    enable_presence=False,   # Track online users
+    enable_typing=False,     # Show typing indicators
+    enable_cursors=False     # Track mouse positions
+)
 ```
+
+**Key Parameters:**
+
+- `persist` - Enable persistence (messages saved to SQLite automatically)
+- `collaborative` - Enable CRDT-based collaborative editing
+- `db_path` - Custom SQLite database path (default: `starstream.db`)
+- `storage` - Custom storage backend (overrides auto-creation)
 
 **Methods:**
 
@@ -201,6 +247,7 @@ StarStreamPlugin(app, default_topic="global")
 - `broadcast(message, target)` - Fire-and-forget broadcast
 - `get_stream_url(topic)` - Get SSE endpoint URL
 - `get_stream_element(topic)` - Get SSE connection element
+- `collaborative` - Access collaborative editing engine (if enabled)
 
 ### Helpers
 
@@ -277,39 +324,88 @@ async def cursor_update(x: int, y: int, user: str, room_id: str):
     )
 ```
 
-### Message History
+### Persistence
 
-Store and retrieve message history:
+**Automatic with `persist=True`:**
 
 ```python
-from starstream import MessageHistory
+# SQLite auto-created at starstream.db
+stream = StarStreamPlugin(app, persist=True)
+```
 
-history = MessageHistory(max_messages=1000, ttl_seconds=3600)
+**Custom database path:**
 
-@rt("/chat/send", methods=["POST"])
-async def send_message(user: str, msg: str, room_id: str):
-    # Store the message
-    await history.add(room_id, {
-        'user': user,
-        'text': msg,
-        'timestamp': time.time()
-    })
-    
-    # Get recent history
-    recent = history.get_recent(room_id, limit=50)
+```python
+stream = StarStreamPlugin(app, persist=True, db_path="my-app.db")
+```
+
+**Custom storage backend:**
+
+```python
+from starstream.storage import StorageBackend
+
+class PostgresBackend(StorageBackend):
+    # Implement your own backend...
+    pass
+
+stream = StarStreamPlugin(
+    app,
+    persist=True,
+    storage=PostgresBackend(DATABASE_URL)
+)
+```
+
+### Collaborative Editing
+
+**Real CRDT-powered collaborative editing with Loro:**
+
+```python
+# Install with Loro support
+pip install starstream[collaborative]
+
+# Enable collaborative editing
+stream = StarStreamPlugin(app, collaborative=True)
+
+# Sync document changes (uses real Loro CRDT under the hood)
+@rt("/doc/{doc_id}/sync", methods=["POST"])
+async def sync_doc(doc_id: str, delta: bytes, user_id: str):
+    # delta is exported from LoroDoc on the client
+    await stream.collaborative.sync(doc_id, delta, user_id)
+
+# Get document state
+state = await stream.collaborative.get_state(doc_id)
+# Returns: {"doc_id": "...", "peers": [...], "content": <Loro snapshot>}
+```
+
+**How it works:**
+- Uses **Loro CRDT** (v1.10.3+) for conflict-free collaborative editing
+- Automatic conflict resolution
+- Documents can be persisted to storage
+- Exports/imports Loro snapshots and deltas
+
+**With persistence:**
+
+```python
+# Collaborative documents persist to SQLite
+stream = StarStreamPlugin(
+    app,
+    collaborative=True,
+    persist=True
+)
+```
+
+**Note:** Requires `loro` package. Install with:
+```bash
+pip install starstream[collaborative]
 ```
 
 ### SQLite Storage Backend (Default)
 
-**SQLite is automatic** when you enable features that need persistence. No imports, no configuration:
+**SQLite is automatic** when you enable `persist`. No imports, no configuration:
 
 ```python
 # SQLite auto-created at starstream.db
-stream = StarStreamPlugin(
-    app,
-    enable_presence=True,  # Auto-uses SQLite
-    enable_history=True    # Auto-uses SQLite
-)
+stream = StarStreamPlugin(app, persist=True)
 ```
 
 **Custom database path (optional):**
@@ -318,21 +414,32 @@ stream = StarStreamPlugin(
 # Custom SQLite location
 stream = StarStreamPlugin(
     app,
-    enable_history=True,
-    db_path="my-app.db"  # Custom path
+    persist=True,
+    db_path="my-app.db"
 )
 ```
 
 **Advanced: Custom backend (optional):**
 
 ```python
-from starstream.storage import SQLiteBackend
+from starstream.storage import StorageBackend
 
-# Only if you need custom SQLite configuration
+# Implement your own backend
+class PostgresBackend(StorageBackend):
+    async def get(self, key: str):
+        # Your implementation...
+        pass
+    
+    async def set(self, key: str, value, ttl=None):
+        # Your implementation...
+        pass
+    
+    # ... other methods
+
 stream = StarStreamPlugin(
     app,
-    enable_history=True,
-    storage=SQLiteBackend("custom.db", pragma={"journal_mode": "WAL"})
+    persist=True,
+    storage=PostgresBackend(DATABASE_URL)
 )
 ```
 
@@ -355,8 +462,8 @@ See the `examples/` directory:
 # Development
 pip install starstream[dev]
 
-# Loro CRDT integration (separate plugin)
-pip install starstream-loro
+# Collaborative editing
+pip install starstream[collaborative]
 ```
 
 ## License

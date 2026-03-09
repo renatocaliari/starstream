@@ -16,14 +16,12 @@ Example:
         yield elements(Div(msg), "#chat", "append")
         # Automatic broadcast to all clients!
 
-With features:
-    stream = StarStreamPlugin(
-        app,
-        enable_presence=True,
-        enable_typing=True,
-        enable_cursors=True,
-        enable_history=True
-    )
+With persistence:
+    stream = StarStreamPlugin(app, persist=True)
+
+With collaborative editing:
+    stream = StarStreamPlugin(app, collaborative=True)
+    await stream.collaborative.sync("doc-1", delta, "user-123")
 """
 
 from .plugin import StarStreamPlugin
@@ -39,7 +37,7 @@ from .storage.base import StorageBackend
 from .storage.sqlite import SQLiteBackend
 from .helpers import throttle, debounce, RateLimiter, MessageBuilder
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 __all__ = [
     "StarStreamPlugin",
     "StarStreamCore",
