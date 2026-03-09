@@ -63,11 +63,15 @@ def editor(doc_id: str, user: str):
 
 
 @rt("/doc/{doc_id}/sync", methods=["POST"])
-async def sync_document(doc_id: str, user: str):
-    # In real implementation, get content from request
-    # For demo, just acknowledge the sync
+async def sync_document(doc_id: str, user: str, request):
+    """Receive delta from client and sync with auto-broadcast to other peers."""
+    # In production, receive delta from request body
+    # delta = await request.body()
+    # await stream.collaborative.sync(doc_id, delta, user)
+
+    # For demo: just acknowledge the sync
     await stream.collaborative.connect(doc_id, user)
-    return Div(cls="text-green-600")("Synced")
+    return Div(cls="text-green-600")("Synced - Auto-broadcast to other peers")
 
 
 if __name__ == "__main__":

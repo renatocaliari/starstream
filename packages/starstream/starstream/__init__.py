@@ -21,7 +21,12 @@ With persistence:
 
 With collaborative editing:
     stream = StarStreamPlugin(app, collaborative=True)
+
+    # Convention: sync() auto-broadcasts to other peers
     await stream.collaborative.sync("doc-1", delta, "user-123")
+
+    # Manual control: apply_delta() without broadcast
+    await stream.collaborative.apply_delta("doc-1", delta, "user-123")
 """
 
 from .plugin import StarStreamPlugin

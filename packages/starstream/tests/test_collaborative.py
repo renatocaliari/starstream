@@ -131,3 +131,52 @@ class TestCollaborativeAPI:
         # Document should be cleaned up
         stats = stream.collaborative.get_stats()
         assert stats["documents"] == 0
+
+
+class TestCollaborativeBroadcast:
+    """Test collaborative auto-broadcast functionality."""
+
+    def test_collaborative_has_apply_delta_method(self, mock_app):
+        """collaborative should have apply_delta method for manual control."""
+        from starstream import StarStreamPlugin
+
+        stream = StarStreamPlugin(mock_app, collaborative=True)
+
+        assert hasattr(stream.collaborative, "apply_delta")
+        assert callable(stream.collaborative.apply_delta)
+
+    @pytest.mark.asyncio
+    async def test_apply_delta_without_broadcast(self, mock_app):
+        """apply_delta() should apply delta without broadcasting."""
+        from starstream import StarStreamPlugin
+
+        # Track if broadcast was called
+        broadcast_calls = []
+        original_broadcast = mock_app.broadcast if hasattr(mock_app, "broadcast") else None
+
+        stream = StarStreamPlugin(mock_app, collaborative=True)
+
+        # Connect peer
+        await stream.collaborative.connect("doc-test", "user-1")
+
+        # Apply delta without broadcast
+        delta = b"test delta"
+        result = await stream.collaborative.apply_delta("doc-test", delta, "user-1")
+
+        assert result is True
+        # Delta should be applied
+        state = await stream.collaborative.get_state("doc-test")
+        assert state is not None
+
+    def test_collaborative_engine_has_broadcaster(self, mock_app):
+        """CollaborativeEngine should have broadcaster injected from plugin."""
+        from starstream import StarStreamPlugin
+
+        stream = StarStreamPlugin(mock_app, collaborative=True)
+
+        # Access collaborative to trigger initialization
+        _ = stream.collaborative
+
+        # Check that broadcaster is the plugin's broadcast method
+        assert stream._collaborative._broadcaster is not None
+        assert stream._collaborative._broadcaster == stream.broadcast

@@ -40,16 +40,19 @@ class CollaborativeEngine:
         state = await stream.collaborative.get_state("doc-1")
     """
 
-    def __init__(self, storage=None):
+    def __init__(self, storage=None, broadcaster=None):
         """
         Initialize collaborative engine.
 
         Args:
             storage: Optional storage backend for persistence.
                      If None, documents are kept in memory.
+            broadcaster: Optional broadcast function for real-time updates.
+                        Receives (message, target) and broadcasts to peers.
         """
         self._documents: Dict[str, CollaborativeDocument] = {}
         self._storage = storage
+        self._broadcaster = broadcaster
         self._lock = asyncio.Lock()
 
         # Check if Loro is available
@@ -142,7 +145,10 @@ class CollaborativeEngine:
         Automatically:
         1. Connects peer if not already connected
         2. Applies delta to document using Loro CRDT
-        3. Broadcasts changes to other peers
+        3. Broadcasts changes to other peers (if broadcaster configured)
+
+        This is the "Convention over Configuration" approach - sync implies
+        propagation to other peers by default.
 
         Args:
             doc_id: Document identifier
@@ -151,6 +157,58 @@ class CollaborativeEngine:
 
         Returns:
             True if sync successful
+        """
+        # First apply the delta locally
+        success = await self.apply_delta(doc_id, delta, peer_id)
+        if not success:
+            return False
+
+        # Broadcast to other peers if broadcaster is available
+        if self._broadcaster:
+            async with self._lock:
+                if doc_id in self._documents:
+                    doc = self._documents[doc_id]
+                    other_peers = doc.peers - {peer_id}
+
+                    for peer in other_peers:
+                        # Export update for this peer
+                        peer_delta = doc.loro_doc.export({"mode": "update"})
+
+                        # Broadcast via SSE
+                        self._broadcaster(
+                            (
+                                "signals",
+                                {
+                                    "collaborative": {
+                                        "doc_id": doc_id,
+                                        "delta": peer_delta.hex(),  # Convert bytes to hex for JSON
+                                        "from_peer": peer_id,
+                                    }
+                                },
+                            ),
+                            target=f"user:{peer}",
+                        )
+
+        return True
+
+    async def apply_delta(self, doc_id: str, delta: bytes, peer_id: str) -> bool:
+        """
+        Apply a delta to a document WITHOUT broadcasting to other peers.
+
+        Use this for:
+        - Manual control over when to broadcast
+        - Server-side only updates
+        - Custom synchronization logic
+
+        For automatic broadcast, use sync() instead.
+
+        Args:
+            doc_id: Document identifier
+            delta: CRDT delta bytes (exported from LoroDoc)
+            peer_id: Peer/user identifier
+
+        Returns:
+            True if delta applied successfully
         """
         # Auto-connect if needed
         if doc_id not in self._documents or peer_id not in self._documents[doc_id].peers:
@@ -169,7 +227,7 @@ class CollaborativeEngine:
                 return True
             except Exception as e:
                 # Log error but don't crash
-                print(f"Error syncing document {doc_id}: {e}")
+                print(f"Error applying delta to document {doc_id}: {e}")
                 return False
 
     async def get_state(self, doc_id: str) -> Optional[Dict[str, Any]]:

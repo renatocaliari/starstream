@@ -67,9 +67,12 @@ stream = StarStreamPlugin(app, collaborative=True)
 # Conectar usuário ao documento
 await stream.collaborative.connect("doc-1", "user-123")
 
-# Sincronizar mudanças (CRDT real)
+# Sincronizar mudanças (CRDT real) - AUTO-BROADCAST to other peers
 delta = client_loro_doc.export({"mode": "update"})
 await stream.collaborative.sync("doc-1", delta, "user-123")
+
+# Manual control: apply delta without broadcast
+await stream.collaborative.apply_delta("doc-1", delta, "user-123")
 
 # Obter estado
 state = await stream.collaborative.get_state("doc-1")

@@ -167,7 +167,10 @@ class StarStreamPlugin:
 
         # Note: Loro is checked when actually using CRDT features
         # This allows the engine to be created even if Loro is not installed
-        self._collaborative = CollaborativeEngine(storage=self.storage)
+        self._collaborative = CollaborativeEngine(
+            storage=self.storage,
+            broadcaster=self.broadcast,  # Enable auto-broadcast to other peers
+        )
 
     def _register_stream_endpoint(self):
         """Register the SSE stream endpoint."""
